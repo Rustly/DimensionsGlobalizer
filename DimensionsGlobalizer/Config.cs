@@ -42,6 +42,10 @@ namespace DimensionsGlobalizer
 
         public bool EnableUserGlobalization { get; set; } = true;
 
+        public string ServerSpecificPermissionIdentifier { get; set; }
+
+        public bool EnableServerSpecificPermissions { get; set; } = true;
+
         public string GlobalDatabaseConnection { get; set; } = "Server=localhost; Port=3306; Database=global; Uid=username; Pwd=assword;";
     }
 }

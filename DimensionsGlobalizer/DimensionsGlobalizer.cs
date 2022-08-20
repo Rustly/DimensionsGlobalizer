@@ -23,6 +23,9 @@ namespace DimensionsGlobalizer
             if (TShock.Config.Settings.StorageType.ToLowerInvariant() != "mysql")
                 throw new Exception("Globalization is only allowed if config.storagetype is set to mysql.");
 
+            if (config.ServerSpecificPermissionIdentifier is null && config.EnableServerSpecificPermissions)
+                throw new Exception("Please provide a permission identifier for server specific permissions in the config");
+
             var db = new MySql.Data.MySqlClient.MySqlConnection(config.GlobalDatabaseConnection);
 
             if (config.EnableUserGlobalization)
@@ -39,6 +42,7 @@ namespace DimensionsGlobalizer
                 TShock.ItemBans.DataModel = new TShockAPI.DB.ItemManager(db);
 
             TShockAPI.Hooks.GeneralHooks.ReloadEvent += GeneralHooks_ReloadEvent;
+            TShockAPI.Hooks.PlayerHooks.PlayerPermission += PlayerHooks_PlayerPermission;
         }
 
         protected override void Dispose(bool disposing)
@@ -46,9 +50,21 @@ namespace DimensionsGlobalizer
             if (disposing)
             {
                 TShockAPI.Hooks.GeneralHooks.ReloadEvent -= GeneralHooks_ReloadEvent;
+                TShockAPI.Hooks.PlayerHooks.PlayerPermission -= PlayerHooks_PlayerPermission;
             }
 
             base.Dispose(disposing);
+        }
+
+        private void PlayerHooks_PlayerPermission(TShockAPI.Hooks.PlayerPermissionEventArgs args)
+        {
+            if (config.EnableServerSpecificPermissions)
+            {
+                if (args.Player.Group.HasPermission(string.Format("{0}.{1}", config.ServerSpecificPermissionIdentifier.ToLowerInvariant(), args.Permission)))
+                    args.Result = TShockAPI.Hooks.PermissionHookResult.Granted;
+                else if (args.Player.Group.negatedpermissions.Any(s => s == string.Format("{0}.{1}", config.ServerSpecificPermissionIdentifier.ToLowerInvariant(), args.Permission)))
+                    args.Result = TShockAPI.Hooks.PermissionHookResult.Denied;
+            }
         }
 
         private void GeneralHooks_ReloadEvent(TShockAPI.Hooks.ReloadEventArgs e)
