@@ -9,6 +9,7 @@ using TShockAPI;
 
 namespace DimensionsGlobalizer
 {
+    [ApiVersion(2, 1)]
     public class DimensionsGlobalizer : TerrariaPlugin
     {
         private Config config;
